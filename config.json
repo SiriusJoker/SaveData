@@ -1,0 +1,12 @@
+{
+    "save_vertex_count": true,
+    "save_edge_count": false,
+    "save_face_count": false,
+    "save_triangle_count": false,
+    "save_uv_shell_count": true,
+    "save_visibility": true,
+    "save_children_count": true,
+    "save_display_layers": true,
+    "save_render_layers": true,
+    "save_groups": true
+}
