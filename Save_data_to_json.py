@@ -3,15 +3,28 @@ import json
 import os
 from datetime import datetime
 from collections import namedtuple
+from PySide2 import QtWidgets
+import traceback
 
 out_name_path=namedtuple('out_name_path',['raw_name','output_path'])
+
+def show_error_window(error_message, message):
+    msg_box = QtWidgets.QMessageBox()
+    msg_box.setIcon(QtWidgets.QMessageBox.Critical)
+    msg_box.setWindowTitle("Error")
+    msg_box.setText("The script Save_data_to_json encountered an error. \n" + message)
+    msg_box.setDetailedText(error_message)
+    msg_box.exec_()
 
 def load_config(config_path):
     try:
         with open(config_path, "r") as config_file:
             return json.load(config_file)
     except Exception as e:
-        print(f"Error loading configuration: {e}")
+        message = f"Error loading configuration: {e}"
+        print(message)
+        error_details = traceback.format_exc()
+        show_error_window(error_details,message)
         return {}
 
 def get_output_path(filepath):
@@ -66,7 +79,10 @@ def get_poly_data(poly_objects,config):
 
             data_obj[transform] = obj_data
         except Exception as e:
-            print(f"Error processing object {obj}: {e}")
+            message = f"Error processing object {obj}: {e}"
+            print(message)
+            error_details = traceback.format_exc()
+            show_error_window(error_details, message)
             continue
     return data_obj
 
@@ -80,7 +96,10 @@ def export_poly_data_to_json():
     # Get current scene
     filepath = cmds.file(q=True, sn=True)
     if not filepath:
-        print("No scene file is currently open. Maybe you need to save the scene and try again")
+        message = "No scene file is currently open. Maybe you need to save the scene and try again"
+        print(message)
+        error_details = traceback.format_exc()
+        show_error_window(error_details, message)
         return
 
     out_name_path=get_output_path(filepath)
@@ -89,7 +108,10 @@ def export_poly_data_to_json():
     # Get data for polygonal objects
     poly_objects = cmds.ls(type="mesh", long=True)
     if not poly_objects:
-        print("No polygonal objects found in the scene.")
+        message = "No polygonal objects found in the scene."
+        print(message)
+        error_details = traceback.format_exc()
+        show_error_window(error_details, message)
 
     data_obj = get_poly_data(poly_objects,config)
 
@@ -114,6 +136,9 @@ def export_poly_data_to_json():
             json.dump(data, json_file, indent=4)
         print(f"Data exported successfully to {output_path}")
     except Exception as e:
-        print(f"Failed to write JSON file: {e}")
+        message = f"Failed to write JSON file: {e}"
+        print(message)
+        error_details = traceback.format_exc()
+        show_error_window(error_details, message)
 
 export_poly_data_to_json()
