@@ -1,20 +1,24 @@
 import maya.cmds as cmds
+import maya.mel as mel
 import json
 import os
 from datetime import datetime
 from collections import namedtuple
 from PySide2 import QtWidgets
 import traceback
+import sys
+
+script_directory = cmds.internalVar(userScriptDir=True)
+script_directory = os.path.join(script_directory, "SaveData/")
+
+if script_directory not in sys.path:
+    sys.path.append(script_directory)
+
+from error_utils import show_error_window
+from screenshot_utils import take_screenshot_with_hidden_geometry
 
 out_name_path=namedtuple('out_name_path',['raw_name','output_path'])
 
-def show_error_window(error_message, message):
-    msg_box = QtWidgets.QMessageBox()
-    msg_box.setIcon(QtWidgets.QMessageBox.Critical)
-    msg_box.setWindowTitle("Error")
-    msg_box.setText("The script Save_data_to_json encountered an error. \n" + message)
-    msg_box.setDetailedText(error_message)
-    msg_box.exec_()
 
 def load_config(config_path):
     try:
@@ -86,11 +90,13 @@ def get_poly_data(poly_objects,config):
             continue
     return data_obj
 
+
+
+
 def export_poly_data_to_json():
 
-    script_directory = cmds.internalVar(userScriptDir=True)
 
-    config_path = os.path.join(script_directory, "SaveData/config.json") 
+    config_path = os.path.join(script_directory, "config.json")
     config=load_config(config_path)
 
     # Get current scene
@@ -115,7 +121,8 @@ def export_poly_data_to_json():
 
     data_obj = get_poly_data(poly_objects,config)
 
-    
+    screenshot_path = take_screenshot_with_hidden_geometry(filepath)
+
     # Get data for scene
     file_size = os.path.getsize(filepath)
     completion_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -123,13 +130,15 @@ def export_poly_data_to_json():
         "scene_name": raw_name,
         "scene_size (bytes)": file_size,
         "completion_time": completion_time,
+        "screenshot_path": screenshot_path
     }
     
     data = {
         "Polygonal objects data": data_obj,
         "Scene data": scene_data
     }
-    
+
+
     # Write data
     try:
         with open(output_path, "w") as json_file:
